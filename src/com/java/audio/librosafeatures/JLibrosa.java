@@ -87,6 +87,15 @@ public class JLibrosa {
 	}
 	
 	
+	public double [][] generateSTFTFeatures(double[] magValues, int sr, int nMFCC){
+		MFCC mfccConvert = new MFCC();
+		mfccConvert.setSampleRate(sr);
+		mfccConvert.setN_mfcc(nMFCC);
+		double [][] stftValues = mfccConvert.stftMagSpec(magValues);
+		return stftValues;
+		
+	}
+	
 	public double [] loadAndRead(String path, int sr, int readDurationInSeconds) throws IOException, WavFileException {
 	
 		double[][] magValueArray = readMagnitudeValuesFromFile(path, sr, readDurationInSeconds);
