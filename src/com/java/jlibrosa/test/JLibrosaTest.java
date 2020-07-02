@@ -9,6 +9,7 @@ import com.java.audio.librosafeatures.WavFile;
 import com.java.audio.librosafeatures.WavFileException;
 import com.java.audio.process.MFCC;
 
+
 public class JLibrosaTest {
 
 	public static void main(String[] args) throws IOException, WavFileException {
@@ -18,7 +19,7 @@ public class JLibrosaTest {
 		int mSampleRate;
 		int mChannels;
 		
-		File sourceFile = new File("audioFiles/100263-2-0-126.wav");
+		File sourceFile = new File("audioFiles/1995-1826-0003.wav");
         WavFile wavFile = null;
         
             wavFile = WavFile.openWavFile(sourceFile);
@@ -54,6 +55,14 @@ public class JLibrosaTest {
             mfccConvert.setN_mfcc(nMFCC);
             float[] mfccInput = mfccConvert.process(meanBuffer);
 
+            
+            
+            
+            
+            
+            double[][] stftArray = mfccConvert.stftMagSpec(meanBuffer);
+            
+            
             int nFFT = mfccInput.length/nMFCC;
             double [][] mfccValues = new double[nMFCC][nFFT];
 

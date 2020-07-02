@@ -40,7 +40,7 @@ public class WavFile {
     private byte[] buffer;                    // Local buffer used for IO
     private int bufferPointer;                // Points to the current position in local buffer
     private int bytesRead;                    // Bytes read after last read into local buffer
-    private int frameCounter;                // Current number of frames read or written
+    private long frameCounter;                // Current number of frames read or written
     private long fileSize;
 
     // Cannot instantiate WavFile directly, must either use newWavFile() or openWavFile()
@@ -176,7 +176,30 @@ public class WavFile {
 
                 // Flag that we've found the wave data chunk
                 foundData = true;
-                               
+                /* byte[] data = null;
+                final ByteArrayOutputStream baout = new ByteArrayOutputStream();
+                int c;
+                while ((c = wavFile.iStream.read(wavFile.buffer, 0, 16)) != -1) {
+	                baout.write(wavFile.buffer, 0, c);
+	            }
+	            
+	            baout.close();
+	            data = baout.toByteArray();
+		
+	            double[] doubleInputBuffer = new double[data.length];
+	            int j = 0;
+	   		 	for (int i = 0; i < data.length; i++) {
+	   		 	    doubleInputBuffer[i] = data[i] / 32767.0;
+	   		 	    j = j + 1;
+	   		      }
+
+
+	   		 	MFCC mfccConvert = new MFCC();
+	   		 	float[] mfccInput = mfccConvert.process(doubleInputBuffer);
+	   		 	System.out.println(1);
+
+                */
+                
                 break;
             } else {
                 // If an unknown chunk ID is found, just skip over the chunk data
@@ -221,9 +244,6 @@ public class WavFile {
     private double readSample() throws IOException, WavFileException {
         long val = 0;
 
-        DecimalFormat df = new DecimalFormat("#.#####");
-        df.setRoundingMode(RoundingMode.CEILING);
-
         for (int b = 0; b < bytesPerSample; b++) {
             if (bufferPointer == bytesRead) {
                 int read = iStream.read(buffer, 0, BUFFER_SIZE);
@@ -239,26 +259,42 @@ public class WavFile {
             bufferPointer++;
         }
 
-        return Double.parseDouble(df.format(val/32767.0));
+        return val/32767.0;
     }
-    
-    
+
+    public int readFrames(float[] sampleBuffer, int numFramesToRead) throws IOException, WavFileException {
+        return readFramesInternal(sampleBuffer, 0, numFramesToRead);
+    }
+
+    private int readFramesInternal(float[] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException {
+        if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
+
+        for (int f = 0; f < numFramesToRead; f++) {
+            if (frameCounter == numFrames) return f;
+
+            for (int c = 0; c < numChannels; c++) {
+                sampleBuffer[offset] = floatOffset + (float) readSample() / floatScale;
+                offset++;
+            }
+
+            frameCounter++;
+        }
+
+        return numFramesToRead;
+    }
+
     public int readFrames(double[][] sampleBuffer, int numFramesToRead, int frameOffset) throws IOException, WavFileException {
         return readFramesInternal(sampleBuffer, frameOffset, numFramesToRead);
     }
 
-    
     private int readFramesInternal(double[][] sampleBuffer, int frameOffset, int numFramesToRead) throws IOException, WavFileException {
         if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
-        
 
-        for (int f = frameOffset; f < numFramesToRead; f++) {
-        	
-        	if (frameOffset == numFramesToRead) return frameOffset;
-            if (frameOffset == numFrames) return frameOffset;
+        for (int f = 0; f < numFramesToRead; f++) {
+            if (frameCounter == numFrames) return frameOffset;
 
             for (int c = 0; c < numChannels; c++) {
-                sampleBuffer[c][frameCounter] = (double) readSample();
+                sampleBuffer[c][frameOffset] = (double) readSample();
 
             }
             frameCounter++;
@@ -268,7 +304,6 @@ public class WavFile {
 
         return frameOffset;
     }
-
 
     public void close() throws IOException {
         // Close the input stream and set to null

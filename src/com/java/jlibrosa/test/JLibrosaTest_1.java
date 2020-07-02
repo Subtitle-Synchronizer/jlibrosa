@@ -14,8 +14,6 @@ public class JLibrosaTest_1 {
 		double [] loadValues = jLibrosa.loadAndRead("audioFiles/100263-2-0-126.wav", 44100, -1);
 		double [][] loadValuesAcrossChannels = jLibrosa.loadAndReadAcrossChannels("audioFiles/100263-2-0-126.wav", 44100, -1);
 		
-		double [][] mfccFeatures = jLibrosa.generateMFCCFeatures(loadValues, 44100, 40);
-		
 		System.out.println("Test....");
 		
 		

@@ -1,5 +1,9 @@
 package com.java.audio.process;
 
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
 
 public class MFCC {
 
@@ -73,12 +77,11 @@ public class MFCC {
     }
 
 
-    //stft, librosa
-    private double[][] stftMagSpec(double[] y){
+  //stft, librosa
+    public double[][] stftMagSpec(double[] y){
         //Short-time Fourier transform (STFT)
         final double[] fftwin = getWindow();
         //pad y with reflect mode so it's centered. This reflect padding implementation is
-        // not perfect but works for this demo.
         double[] ypad = new double[n_fft+y.length];
         for (int i = 0; i < n_fft/2; i++){
             ypad[(n_fft/2)-i-1] = y[i+1];
@@ -91,18 +94,51 @@ public class MFCC {
 
         final double[][] frame = yFrame(ypad);
         double[][] fftmagSpec = new double[1+n_fft/2][frame[0].length];
-        double[] fftFrame = new double[n_fft];
+        
+        double [] fftFrame = new double[n_fft];
+        
+        
         for (int k = 0; k < frame[0].length; k++){
-            for (int l =0; l < n_fft; l++){
-                fftFrame[l] = fftwin[l]*frame[l][k];
+        	int fftFrameCounter=0;
+        	for (int l =0; l < n_fft; l++){
+                fftFrame[fftFrameCounter] = fftwin[l]*frame[l][k];
+                
+                fftFrameCounter = fftFrameCounter + 1;
             }
-            double[] magSpec = magSpectrogram(fftFrame);
+        	
+        	
+        	
+        	double[] tempConversion = new double[fftFrame.length];
+    	    double[] tempImag = new double[fftFrame.length];
+
+    	    FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+    	    try {           
+    	        Complex[] complx = transformer.transform(fftFrame, TransformType.FORWARD);
+
+    	        for (int i = 0; i < complx.length; i++) {               
+    	            double rr = (complx[i].getReal());
+    	            
+    	            double ri = (complx[i].getImaginary());
+
+    	            tempConversion[i] = rr;
+    	            tempImag[i] = ri;
+    	        }
+
+    	    } catch (IllegalArgumentException e) {
+    	        System.out.println(e);
+    	    }
+    		
+    	  	
+            double[] magSpec = tempConversion;
             for (int i =0; i < 1+n_fft/2; i++){
                 fftmagSpec[i][k] = magSpec[i];
             }
         }
         return fftmagSpec;
     }
+    
+    
+    
 
     private double[] magSpectrogram(double[] frame){
         double[] magSpec = new double[frame.length];
