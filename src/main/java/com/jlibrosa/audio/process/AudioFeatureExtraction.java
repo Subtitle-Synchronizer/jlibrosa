@@ -25,6 +25,8 @@ public class AudioFeatureExtraction {
 	private final static int n_mels = 128;
 
 	/**
+	 * Variable for holding Sample Rate value
+	 * 
 	 * @param sampleRateVal
 	 */
 	public void setSampleRate(double sampleRateVal) {
@@ -32,6 +34,8 @@ public class AudioFeatureExtraction {
 	}
 
 	/**
+	 * Variable for holding n_mfcc value
+	 * 
 	 * @param n_mfccVal
 	 */
 	public void setN_mfcc(int n_mfccVal) {

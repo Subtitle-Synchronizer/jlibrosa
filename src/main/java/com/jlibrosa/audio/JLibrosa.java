@@ -145,7 +145,7 @@ public class JLibrosa {
 
 	/**
 	 * This function calculates and returns the STFT values of given Audio Sample
-	 * values. STFT => Short Term Fourier Transform
+	 * values. STFT stands for Short Term Fourier Transform
 	 * 
 	 * @param magValues
 	 * @param nMFCC
@@ -160,8 +160,8 @@ public class JLibrosa {
 	}
 
 	/**
-	 * This function -> load the audio file -> read its Numeric Magnitude Feature
-	 * Values -> take the mean of amplitude values across all the channels and
+	 * This function loads the audio file, reads its Numeric Magnitude Feature
+	 * values and then takes the mean of amplitude values across all the channels and
 	 * convert the signal to mono mode
 	 * 
 	 * @param path

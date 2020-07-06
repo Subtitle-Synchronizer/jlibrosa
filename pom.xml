@@ -10,20 +10,42 @@
 	<name>jlibrosa</name>
 	<description>Core Java Library to extract Audio Features from given Audio file.</description>
 
+	<url>https://github.com/Subtitle-Synchronizer/jlibrosa</url>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Abhishek Khandelwal</name>
+			<email>abhishek.cs.jec@gmail.com</email>
+			<organization>Subtitle-Synchronizer</organization>
+			<organizationUrl>https://github.com/Subtitle-Synchronizer</organizationUrl>
+		</developer>
+		<developer>
+			<name>Vasanth Kumar</name>
+			<email>vvk.victory@gmail.com</email>
+			<organization>Subtitle-Synchronizer</organization>
+			<organizationUrl>https://github.com/Subtitle-Synchronizer</organizationUrl>
+		</developer>
+	</developers>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
 	</properties>
-	
+
 	<dependencies>
-        <dependency>
-        	<groupId>org.apache.commons</groupId>
-		    <artifactId>commons-math3</artifactId>
-		    <version>3.6.1</version>
-        </dependency>
-    </dependencies>
-    
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+			<version>3.6.1</version>
+		</dependency>
+	</dependencies>
+
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>
@@ -41,6 +63,29 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<!-- To generate JavaDoc, run Maven command: mvn javadoc:javadoc -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<failOnError>false</failOnError>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+					<doclint>none</doclint>
+					<failOnError>false</failOnError>
 				</configuration>
 			</plugin>
 		</plugins>
