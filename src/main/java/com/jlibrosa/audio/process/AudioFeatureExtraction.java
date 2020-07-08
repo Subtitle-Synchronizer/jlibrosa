@@ -8,7 +8,7 @@ import org.apache.commons.math3.transform.TransformType;
 /**
  * This Class calculates the MFCC, STFT values of given audio samples.
  * 
- * This source code has been referenced from Open Source
+ * Source based on https://github.com/chiachunfu/speech/blob/master/speechandroid/src/org/tensorflow/demo/mfcc/MFCC.java
  * 
  * @author abhi-rawat1
  *

@@ -9,7 +9,7 @@ import java.io.IOException;
 /**
  * This Class load and read the Wav file.
  * 
- * This source code has been referenced from Open Source.
+ * Source based on https://github.com/Semantive/waveform-android/blob/master/library/src/main/java/com/semantive/waveformandroid/waveform/soundfile/WavFile.java.
  * 
  * @author abhi-rawat1
  *
