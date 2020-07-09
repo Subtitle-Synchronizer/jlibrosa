@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+
+import org.apache.commons.math3.complex.Complex;
 
 import com.jlibrosa.audio.process.AudioFeatureExtraction;
 import com.jlibrosa.audio.wavFile.WavFile;
@@ -18,10 +21,11 @@ import com.jlibrosa.audio.wavFile.WavFileException;
  */
 public class JLibrosa {
 	private int BUFFER_SIZE = 4096;
-	private int mNumFrames;
+	/*private int mNumFrames;
 	private int mSampleRate;
 	private int mChannels;
-
+*/
+	
 	public JLibrosa() {
 
 	}
@@ -61,9 +65,9 @@ public class JLibrosa {
 		WavFile wavFile = null;
 
 		wavFile = WavFile.openWavFile(sourceFile);
-		mNumFrames = (int) (wavFile.getNumFrames());
-		mSampleRate = (int) wavFile.getSampleRate();
-		mChannels = wavFile.getNumChannels();
+		int mNumFrames = (int) (wavFile.getNumFrames());
+		int mSampleRate = (int) wavFile.getSampleRate();
+		int mChannels = wavFile.getNumChannels();
 
 		if (readDurationInSeconds != -1) {
 			mNumFrames = readDurationInSeconds * mSampleRate;
@@ -86,6 +90,72 @@ public class JLibrosa {
 
 	}
 
+	
+	
+	/**
+	 * This method is used to read number of frames present in the audio file.
+	 * 
+	 * @param filePath
+	 * @return no of frames present in audio file
+	 * @throws IOException
+	 * @throws WavFileException
+	 */
+	
+	public int getNoOfFrames(String filePath) throws IOException, WavFileException {
+		File sourceFile = new File(filePath);
+		WavFile wavFile = null;
+		int nNoOfFrames = 0;
+		
+		wavFile = WavFile.openWavFile(sourceFile);
+		nNoOfFrames = (int) (wavFile.getNumFrames());
+		return nNoOfFrames;
+
+	}
+	
+
+	/**
+	 * This method is used to read number of frames present in the audio file.
+	 * 
+	 * @param filePath
+	 * @return no of frames present in audio file
+	 * @throws IOException
+	 * @throws WavFileException
+	 */
+	
+	public int getSampleRate(String filePath) throws IOException, WavFileException {
+		File sourceFile = new File(filePath);
+		WavFile wavFile = null;
+		int nSampleRate = 0;
+		
+		wavFile = WavFile.openWavFile(sourceFile);
+		nSampleRate = (int) (wavFile.getSampleRate());
+		return nSampleRate;
+
+	}
+
+	
+	/**
+	 * This method is used to read number of frames present in the audio file.
+	 * 
+	 * @param filePath
+	 * @return no of frames present in audio file
+	 * @throws IOException
+	 * @throws WavFileException
+	 */
+	
+	public int getNoOfChannels(String filePath) throws IOException, WavFileException {
+		File sourceFile = new File(filePath);
+		WavFile wavFile = null;
+		int nChannels = 0;
+		
+		wavFile = WavFile.openWavFile(sourceFile);
+		nChannels = (int) (wavFile.getNumChannels());
+		return nChannels;
+
+	}
+	
+	
+	
 	/**
 	 * This function calculates and returns the MFCC values of given Audio Sample
 	 * values.
@@ -94,13 +164,13 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public double[][] generateMFCCFeatures(double[] magValues, int nMFCC) {
+	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC) {
 
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
 		mfccConvert.setSampleRate(mSampleRate);
 		mfccConvert.setN_mfcc(nMFCC);
-		float[] mfccInput = mfccConvert.extractMFCCFeatures(magValues);
-
+		float [] mfccInput = mfccConvert.extractMFCCFeatures(magValues); //extractMFCCFeatures(magValues);
+		
 		int nFFT = mfccInput.length / nMFCC;
 		double[][] mfccValues = new double[nMFCC][nFFT];
 
@@ -115,7 +185,7 @@ public class JLibrosa {
 		}
 
 		return mfccValues;
-
+		
 	}
 
 	/**
@@ -151,11 +221,11 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public double[][] generateSTFTFeatures(double[] magValues, int nMFCC) {
+	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC) {
 		AudioFeatureExtraction featureExtractor = new AudioFeatureExtraction();
 		featureExtractor.setSampleRate(mSampleRate);
 		featureExtractor.setN_mfcc(nMFCC);
-		double[][] stftValues = featureExtractor.extractSTFTFeatures(magValues);
+		Complex [][] stftValues = featureExtractor.extractSTFTFeaturesAsComplexValues(magValues);
 		return stftValues;
 	}
 
@@ -179,6 +249,9 @@ public class JLibrosa {
 		DecimalFormat df = new DecimalFormat("#.#####");
 		df.setRoundingMode(RoundingMode.CEILING);
 
+		int mNumFrames = this.getNoOfFrames(path);
+		int mChannels = this.getNoOfChannels(path);
+		
 		// take the mean of amplitude values across all the channels and convert the
 		// signal to mono mode
 		double[] meanBuffer = new double[mNumFrames];

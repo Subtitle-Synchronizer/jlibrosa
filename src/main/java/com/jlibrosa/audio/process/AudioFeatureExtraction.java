@@ -1,5 +1,9 @@
 package com.jlibrosa.audio.process;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
@@ -24,6 +28,7 @@ public class AudioFeatureExtraction {
 	private final static int hop_length = 512;
 	private final static int n_mels = 128;
 
+	
 	/**
 	 * Variable for holding Sample Rate value
 	 * 
@@ -111,6 +116,142 @@ public class AudioFeatureExtraction {
 		return melS;
 	}
 
+	
+	
+	public double[][] stftMagSpec(double[] y){
+		//Short-time Fourier transform (STFT)
+		final double[] fftwin = getWindow();
+		//pad y with reflect mode so it's centered. This reflect padding implementation is
+		// not perfect but works for this demo.
+		double[] ypad = new double[n_fft+y.length];
+		for (int i = 0; i < n_fft/2; i++){
+			ypad[(n_fft/2)-i-1] = y[i+1];
+			ypad[(n_fft/2)+y.length+i] = y[y.length-2-i];
+		}
+		for (int j = 0; j < y.length; j++){
+			ypad[(n_fft/2)+j] = y[j];
+		}
+
+
+		final double[][] frame = yFrame(ypad);
+		double[][] fftmagSpec = new double[1+n_fft/2][frame[0].length];
+		double[] fftFrame = new double[n_fft];
+		
+		for (int k = 0; k < frame[0].length; k++){
+		 	int fftFrameCounter=0;
+
+			for (int l =0; l < n_fft; l++){
+				fftFrame[l] = fftwin[l]*frame[l][k];
+				fftFrameCounter = fftFrameCounter + 1;
+
+			}
+			
+			double[] tempConversion = new double[fftFrame.length];
+    	    double[] tempImag = new double[fftFrame.length];
+
+    	    FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+    	    try {           
+    	        Complex[] complx = transformer.transform(fftFrame, TransformType.FORWARD);
+
+    	        for (int i = 0; i < complx.length; i++) {               
+    	            double rr = (complx[i].getReal());
+    	            
+    	            double ri = (complx[i].getImaginary());
+
+    	            tempConversion[i] = rr * rr + ri * ri;
+    	            tempImag[i] = ri;
+    	        }
+
+    	    } catch (IllegalArgumentException e) {
+    	        System.out.println(e);
+    	    }
+    		
+    	  	
+            double[] magSpec = tempConversion;
+            for (int i =0; i < 1+n_fft/2; i++){
+                fftmagSpec[i][k] = magSpec[i];
+            }
+
+			
+		}
+		return fftmagSpec;
+	}
+		
+	
+	/**
+	 * This function extracts the STFT values as complex values
+	 * 
+	 * @param y
+	 * @return
+	 */
+	
+	public Complex[][] extractSTFTFeaturesAsComplexValues(double[] y){
+		
+		// Short-time Fourier transform (STFT)
+		final double[] fftwin = getWindow();
+				
+		// pad y with reflect mode so it's centered. This reflect padding implementation
+				// is
+		final double[][] frame = padFrame(y);
+		double[][] fftmagSpec = new double[1 + n_fft / 2][frame[0].length];
+
+		double[] fftFrame = new double[n_fft];	
+		
+		Complex [][] complex2DArray = new Complex[1+n_fft/2][frame[0].length];
+		
+		
+		for (int k = 0; k < frame[0].length; k++) {
+			int fftFrameCounter = 0;
+			for (int l = 0; l < n_fft; l++) {
+				fftFrame[fftFrameCounter] = fftwin[l] * frame[l][k];
+				fftFrameCounter = fftFrameCounter + 1;
+			}
+
+			double[] tempConversion = new double[fftFrame.length];
+			double[] tempImag = new double[fftFrame.length];
+
+			FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+		
+			try {
+				Complex[] complx = transformer.transform(fftFrame, TransformType.FORWARD);
+				
+				for(int i=0;i<1+n_fft/2;i++) {
+					complex2DArray[i][k] = complx[i];
+				}
+				
+				
+			
+			} catch (IllegalArgumentException e) {
+				System.out.println(e);
+			}		
+			
+		}
+		return complex2DArray;
+		
+	} 
+	
+	
+	/**
+	 * This function pads the y values
+	 * 
+	 * @param y
+	 * @return
+	 */
+	
+	private double[][] padFrame(double[] yValues){
+		double[] ypad = new double[n_fft + yValues.length];
+		for (int i = 0; i < n_fft / 2; i++) {
+			ypad[(n_fft / 2) - i - 1] = yValues[i + 1];
+			ypad[(n_fft / 2) + yValues.length + i] = yValues[yValues.length - 2 - i];
+		}
+		for (int j = 0; j < yValues.length; j++) {
+			ypad[(n_fft / 2) + j] = yValues[j];
+		}
+
+		final double[][] frame = yFrame(ypad);
+		return frame;
+	}
+	
 	/**
 	 * This function extract STFT values from given Audio Magnitude Values.
 	 * 
@@ -120,18 +261,10 @@ public class AudioFeatureExtraction {
 	public double[][] extractSTFTFeatures(double[] y) {
 		// Short-time Fourier transform (STFT)
 		final double[] fftwin = getWindow();
+		
 		// pad y with reflect mode so it's centered. This reflect padding implementation
 		// is
-		double[] ypad = new double[n_fft + y.length];
-		for (int i = 0; i < n_fft / 2; i++) {
-			ypad[(n_fft / 2) - i - 1] = y[i + 1];
-			ypad[(n_fft / 2) + y.length + i] = y[y.length - 2 - i];
-		}
-		for (int j = 0; j < y.length; j++) {
-			ypad[(n_fft / 2) + j] = y[j];
-		}
-
-		final double[][] frame = yFrame(ypad);
+		final double[][] frame = padFrame(y);
 		double[][] fftmagSpec = new double[1 + n_fft / 2][frame[0].length];
 
 		double[] fftFrame = new double[n_fft];
@@ -147,22 +280,24 @@ public class AudioFeatureExtraction {
 			double[] tempImag = new double[fftFrame.length];
 
 			FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+		
 			try {
 				Complex[] complx = transformer.transform(fftFrame, TransformType.FORWARD);
-
 				for (int i = 0; i < complx.length; i++) {
 					double rr = (complx[i].getReal());
 
 					double ri = (complx[i].getImaginary());
 
-					tempConversion[i] = rr;
+					tempConversion[i] = rr * rr + ri*ri;
 					tempImag[i] = ri;
 				}
 
 			} catch (IllegalArgumentException e) {
 				System.out.println(e);
 			}
-
+			
+			
+			
 			double[] magSpec = tempConversion;
 			for (int i = 0; i < 1 + n_fft / 2; i++) {
 				fftmagSpec[i][k] = magSpec[i];
