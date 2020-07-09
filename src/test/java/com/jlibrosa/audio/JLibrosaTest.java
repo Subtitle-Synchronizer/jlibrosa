@@ -17,7 +17,7 @@ import com.jlibrosa.audio.wavFile.WavFileException;
 public class JLibrosaTest {
 
 	public static void main(String[] args) throws IOException, WavFileException {
-		String audioFilePath = "audioFiles/100263-2-0-126.wav";
+		String audioFilePath = "audioFiles/1995-1826-0003.wav";
 		int defaultSampleRate = -1;		//-1 value implies the method to use default sample rate
 		int defaultAudioDuration = -1;	//-1 value implies the method to process complete audio duration
 		
@@ -34,14 +34,14 @@ public class JLibrosaTest {
 		
 		
 		/* To read the no of frames present in audio file*/
-		int nNoOfFrames = jLibrosa.getNoOfFrames(audioFilePath);
+		int nNoOfFrames = jLibrosa.getNoOfFrames();
 		
 		
 		/* To read sample rate of audio file */
-		int sampleRate = jLibrosa.getSampleRate(audioFilePath);
+		int sampleRate = jLibrosa.getSampleRate();
 		
 		/* To read number of channels in audio file */
-		int noOfChannels = jLibrosa.getNoOfChannels(audioFilePath);
+		int noOfChannels = jLibrosa.getNoOfChannels();
 		
 		
 		System.out.println("/n/n");

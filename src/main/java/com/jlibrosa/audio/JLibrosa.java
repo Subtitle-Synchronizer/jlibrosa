@@ -21,14 +21,55 @@ import com.jlibrosa.audio.wavFile.WavFileException;
  */
 public class JLibrosa {
 	private int BUFFER_SIZE = 4096;
-	/*private int mNumFrames;
-	private int mSampleRate;
-	private int mChannels;
-*/
+	private int noOfFrames = -1;
+	private int sampleRate = -1;
+	private int noOfChannels = -1;
+
 	
+	public int getNoOfChannels() {
+		return noOfChannels;
+	}
+
+
+
+	public void setNoOfChannels(int noOfChannels) {
+		this.noOfChannels = noOfChannels;
+	}
+
+
+
 	public JLibrosa() {
 
 	}
+
+	
+
+	public int getNoOfFrames() {
+		return noOfFrames;
+	}
+
+
+
+	public void setNoOfFrames(int noOfFrames) {
+		this.noOfFrames = noOfFrames;
+	}
+
+
+
+	public int getSampleRate() {
+		return sampleRate;
+	}
+
+
+
+	public void setSampleRate(int sampleRate) {
+		this.sampleRate = sampleRate;
+	}
+
+
+
+	
+
 
 	/**
 	 * This function is used to load the audio file and read its Numeric Magnitude
@@ -69,6 +110,10 @@ public class JLibrosa {
 		int mSampleRate = (int) wavFile.getSampleRate();
 		int mChannels = wavFile.getNumChannels();
 
+		this.setNoOfChannels(mChannels);
+		this.setNoOfFrames(mNumFrames);
+		this.setSampleRate(mSampleRate);
+		
 		if (readDurationInSeconds != -1) {
 			mNumFrames = readDurationInSeconds * mSampleRate;
 		}
@@ -93,70 +138,6 @@ public class JLibrosa {
 	
 	
 	/**
-	 * This method is used to read number of frames present in the audio file.
-	 * 
-	 * @param filePath
-	 * @return no of frames present in audio file
-	 * @throws IOException
-	 * @throws WavFileException
-	 */
-	
-	public int getNoOfFrames(String filePath) throws IOException, WavFileException {
-		File sourceFile = new File(filePath);
-		WavFile wavFile = null;
-		int nNoOfFrames = 0;
-		
-		wavFile = WavFile.openWavFile(sourceFile);
-		nNoOfFrames = (int) (wavFile.getNumFrames());
-		return nNoOfFrames;
-
-	}
-	
-
-	/**
-	 * This method is used to read number of frames present in the audio file.
-	 * 
-	 * @param filePath
-	 * @return no of frames present in audio file
-	 * @throws IOException
-	 * @throws WavFileException
-	 */
-	
-	public int getSampleRate(String filePath) throws IOException, WavFileException {
-		File sourceFile = new File(filePath);
-		WavFile wavFile = null;
-		int nSampleRate = 0;
-		
-		wavFile = WavFile.openWavFile(sourceFile);
-		nSampleRate = (int) (wavFile.getSampleRate());
-		return nSampleRate;
-
-	}
-
-	
-	/**
-	 * This method is used to read number of frames present in the audio file.
-	 * 
-	 * @param filePath
-	 * @return no of frames present in audio file
-	 * @throws IOException
-	 * @throws WavFileException
-	 */
-	
-	public int getNoOfChannels(String filePath) throws IOException, WavFileException {
-		File sourceFile = new File(filePath);
-		WavFile wavFile = null;
-		int nChannels = 0;
-		
-		wavFile = WavFile.openWavFile(sourceFile);
-		nChannels = (int) (wavFile.getNumChannels());
-		return nChannels;
-
-	}
-	
-	
-	
-	/**
 	 * This function calculates and returns the MFCC values of given Audio Sample
 	 * values.
 	 * 
@@ -167,6 +148,11 @@ public class JLibrosa {
 	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC) {
 
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
+		
+		if(mSampleRate==-1) {
+			mSampleRate = this.getSampleRate();
+		}
+		
 		mfccConvert.setSampleRate(mSampleRate);
 		mfccConvert.setN_mfcc(nMFCC);
 		float [] mfccInput = mfccConvert.extractMFCCFeatures(magValues); //extractMFCCFeatures(magValues);
@@ -223,6 +209,11 @@ public class JLibrosa {
 	 */
 	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC) {
 		AudioFeatureExtraction featureExtractor = new AudioFeatureExtraction();
+		
+		if(mSampleRate == -1) {
+			mSampleRate = this.getSampleRate();
+		}
+		
 		featureExtractor.setSampleRate(mSampleRate);
 		featureExtractor.setN_mfcc(nMFCC);
 		Complex [][] stftValues = featureExtractor.extractSTFTFeaturesAsComplexValues(magValues);
@@ -249,8 +240,8 @@ public class JLibrosa {
 		DecimalFormat df = new DecimalFormat("#.#####");
 		df.setRoundingMode(RoundingMode.CEILING);
 
-		int mNumFrames = this.getNoOfFrames(path);
-		int mChannels = this.getNoOfChannels(path);
+		int mNumFrames = this.getNoOfFrames();
+		int mChannels = this.getNoOfChannels();
 		
 		// take the mean of amplitude values across all the channels and convert the
 		// signal to mono mode
