@@ -19,15 +19,21 @@ import org.apache.commons.math3.transform.TransformType;
  */
 public class AudioFeatureExtraction {
 
-	private static int n_mfcc = 40;
-	private static double sampleRate = 44100.0;
+	private int n_mfcc = 40;
+	private double sampleRate = 44100.0;
 
-	private final static double fMax = sampleRate / 2.0;
-	private final static double fMin = 0.0;
-	private final static int n_fft = 2048;
-	private final static int hop_length = 512;
-	private final static int n_mels = 128;
+	
+	
+	private double fMax = sampleRate / 2.0;
+	private double fMin = 0.0;
+	private int n_fft = 2048;
+	private int hop_length = 512;
+	private int n_mels = 128;
 
+	
+	
+	
+	
 	
 	/**
 	 * Variable for holding Sample Rate value
@@ -36,6 +42,55 @@ public class AudioFeatureExtraction {
 	 */
 	public void setSampleRate(double sampleRateVal) {
 		sampleRate = sampleRateVal;
+		this.fMax = this.sampleRate/2.0;
+	}
+
+	public double getfMax() {
+		return fMax;
+	}
+
+	public void setfMax(double fMax) {
+		this.fMax = fMax;
+	}
+
+	public double getfMin() {
+		return fMin;
+	}
+
+	public void setfMin(double fMin) {
+		this.fMin = fMin;
+	}
+
+	public int getN_fft() {
+		return n_fft;
+	}
+
+	public void setN_fft(int n_fft) {
+		this.n_fft = n_fft;
+	}
+
+	public int getHop_length() {
+		return hop_length;
+	}
+
+	public void setHop_length(int hop_length) {
+		this.hop_length = hop_length;
+	}
+
+	public int getN_mels() {
+		return n_mels;
+	}
+
+	public void setN_mels(int n_mels) {
+		this.n_mels = n_mels;
+	}
+
+	public int getN_mfcc() {
+		return n_mfcc;
+	}
+
+	public double getSampleRate() {
+		return sampleRate;
 	}
 
 	/**
@@ -102,7 +157,7 @@ public class AudioFeatureExtraction {
 	 * @param y
 	 * @return
 	 */
-	private double[][] melSpectrogram(double[] y) {
+	public double[][] melSpectrogram(double[] y) {
 		double[][] melBasis = melFilter();
 		double[][] spectro = extractSTFTFeatures(y);
 		double[][] melS = new double[melBasis.length][spectro[0].length];
@@ -116,6 +171,41 @@ public class AudioFeatureExtraction {
 		return melS;
 	}
 
+	
+	
+	/**
+	 * This function generates mel spectrogram values with extracted STFT features as complex values
+	 * 
+	 * @param y
+	 * @return
+	 */
+	public double [][] melSpectrogramWithComplexValueProcessing(double[] y) {
+		
+		Complex[][] spectro = extractSTFTFeaturesAsComplexValues(y);
+		double[][] spectroAbsVal = new double[spectro.length][spectro[0].length];
+		
+		for(int i=0;i<spectro.length;i++) {
+			for(int j=0;j<spectro[0].length;j++) {
+				Complex complexVal = spectro[i][j];
+				double spectroDblVal = Math.sqrt((Math.pow(complexVal.getReal(), 2) + Math.pow(complexVal.getImaginary(), 2)));
+				spectroAbsVal[i][j] = Math.pow(spectroDblVal,2);
+			}
+		}
+		
+		System.out.println("test");
+		double[][] melBasis = melFilter();
+		double[][] melS = new double[melBasis.length][spectro[0].length];
+		for (int i = 0; i < melBasis.length; i++) {
+			for (int j = 0; j < spectro[0].length; j++) {
+				for (int k = 0; k < melBasis[0].length; k++) {
+					melS[i][j] += melBasis[i][k] * spectroAbsVal[k][j];
+				}
+			}
+		}
+		return melS;
+		
+
+	}
 	
 	
 	public double[][] stftMagSpec(double[] y){

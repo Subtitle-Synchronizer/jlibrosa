@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.math3.complex.Complex;
 
+import com.jlibrosa.audio.exception.FileFormatNotSupportedException;
 import com.jlibrosa.audio.process.AudioFeatureExtraction;
 import com.jlibrosa.audio.wavFile.WavFile;
 import com.jlibrosa.audio.wavFile.WavFileException;
@@ -25,7 +26,44 @@ public class JLibrosa {
 	private int sampleRate = -1;
 	private int noOfChannels = -1;
 
+	private double fMax = 44100 / 2.0;
+	private double fMin = 0.0;
+	private int n_fft = 2048;
+	private int hop_length = 512;
+	private int n_mels = 128;
+
 	
+	
+	public double getfMax() {
+		return fMax;
+	}
+
+
+
+	public double getfMin() {
+		return fMin;
+	}
+
+
+
+	public int getN_fft() {
+		return n_fft;
+	}
+
+
+
+	public int getHop_length() {
+		return hop_length;
+	}
+
+
+
+	public int getN_mels() {
+		return n_mels;
+	}
+
+
+
 	public int getNoOfChannels() {
 		return noOfChannels;
 	}
@@ -64,6 +102,7 @@ public class JLibrosa {
 
 	public void setSampleRate(int sampleRate) {
 		this.sampleRate = sampleRate;
+		this.fMax = sampleRate/2.0;
 	}
 
 
@@ -81,9 +120,10 @@ public class JLibrosa {
 	 * @return
 	 * @throws IOException
 	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
 	 */
 	public double[][] loadAndReadAcrossChannels(String path, int sr, int readDurationInSec)
-			throws IOException, WavFileException {
+			throws IOException, WavFileException, FileFormatNotSupportedException {
 		double[][] magValues = readMagnitudeValuesFromFile(path, sr, readDurationInSec);
 		return magValues;
 	}
@@ -98,10 +138,15 @@ public class JLibrosa {
 	 * @return
 	 * @throws IOException
 	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
 	 */
 	private double[][] readMagnitudeValuesFromFile(String path, int sampleRate, int readDurationInSeconds)
-			throws IOException, WavFileException {
+			throws IOException, WavFileException, FileFormatNotSupportedException {
 
+		if(!path.endsWith(".wav")) {
+			throw new FileFormatNotSupportedException("File format not supported. jLibrosa currently supports audio processing of only .wav files");
+		}
+		
 		File sourceFile = new File(path);
 		WavFile wavFile = null;
 
@@ -131,11 +176,14 @@ public class JLibrosa {
 			frameOffset = wavFile.readFrames(buffer, mNumFrames, frameOffset);
 		}
 
+		if(wavFile != null) {
+			wavFile.close();
+		}
+		
 		return buffer;
 
 	}
 
-	
 	
 	/**
 	 * This function calculates and returns the MFCC values of given Audio Sample
@@ -145,9 +193,13 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC) {
+	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
 
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
+		
+		mfccConvert.setN_mfcc(nMFCC);
+		mfccConvert.setN_mels(n_mels);
+		mfccConvert.setHop_length(hop_length);
 		
 		if(mSampleRate==-1) {
 			mSampleRate = this.getSampleRate();
@@ -170,6 +222,26 @@ public class JLibrosa {
 			}
 		}
 
+		return mfccValues;
+		
+	}
+	
+	
+	
+	
+	/**
+	 * This function calculates and returns the MFCC values of given Audio Sample
+	 * values.
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC) {
+
+		
+		double[][] mfccValues = this.generateMFCCFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
+				
 		return mfccValues;
 		
 	}
@@ -200,6 +272,45 @@ public class JLibrosa {
 	}
 
 	/**
+	 * This function calculates and returns the melspectrogram of given Audio Sample
+	 * values.
+	 * 
+	 * @param yValues - audio magnitude values
+	 * @return
+	 */
+	public double[][] generateMelSpectroGram(double[] yValues){
+		
+		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
+		double [][] melSpectrogram = mfccConvert.melSpectrogram(yValues);
+		return melSpectrogram;
+	}
+	
+	
+	/**
+	 * This function calculates and returns the me of given Audio Sample
+	 * values. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param sampleRate
+	 * @param nMFCC
+	 * @param nFFT
+	 * @param nmels
+	 * @param hop_length
+	 * @return
+	 */
+	public double[][] generateMelSpectroGram(double[] yValues, int mSampleRate, int n_fft, int n_mels, int hop_length){
+		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
+		mfccConvert.setSampleRate(mSampleRate);
+		mfccConvert.setN_fft(n_fft);
+		mfccConvert.setN_mels(n_mels);
+		mfccConvert.setHop_length(hop_length);
+		double [][] melSVal = mfccConvert.melSpectrogramWithComplexValueProcessing(yValues);
+		return melSVal;
+	}
+	
+	
+	
+	/**
 	 * This function calculates and returns the STFT values of given Audio Sample
 	 * values. STFT stands for Short Term Fourier Transform
 	 * 
@@ -207,8 +318,11 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC) {
+	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
 		AudioFeatureExtraction featureExtractor = new AudioFeatureExtraction();
+		featureExtractor.setN_fft(n_fft);
+		featureExtractor.setN_mels(n_mels);
+		featureExtractor.setHop_length(hop_length);
 		
 		if(mSampleRate == -1) {
 			mSampleRate = this.getSampleRate();
@@ -217,6 +331,22 @@ public class JLibrosa {
 		featureExtractor.setSampleRate(mSampleRate);
 		featureExtractor.setN_mfcc(nMFCC);
 		Complex [][] stftValues = featureExtractor.extractSTFTFeaturesAsComplexValues(magValues);
+		return stftValues;
+	}
+
+	
+	
+	/**
+	 * This function calculates and returns the STFT values of given Audio Sample
+	 * values. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC) {
+		
+		Complex [][] stftValues = this.generateSTFTFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
 		return stftValues;
 	}
 
@@ -231,9 +361,10 @@ public class JLibrosa {
 	 * @return
 	 * @throws IOException
 	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
 	 */
 	public double[] loadAndRead(String path, int sampleRate, int readDurationInSeconds)
-			throws IOException, WavFileException {
+			throws IOException, WavFileException, FileFormatNotSupportedException {
 
 		double[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
 
