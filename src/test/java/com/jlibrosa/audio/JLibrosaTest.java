@@ -2,6 +2,8 @@ package com.jlibrosa.audio;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.math3.complex.Complex;
 
@@ -26,9 +28,11 @@ public class JLibrosaTest {
 
 		/* To read the magnitude values of audio files - equivalent to librosa.load('../audioFiles/1995-1826-0003.wav', sr=None) function */
 		
-		double[] audioFeatureValues = jLibrosa.loadAndRead(audioFilePath, defaultSampleRate, defaultAudioDuration);
+		float audioFeatureValues [] = jLibrosa.loadAndRead(audioFilePath, defaultSampleRate, defaultAudioDuration);
 		
-		splitSongs(audioFeatureValues, 0.5);
+		ArrayList<Float> audioFeatureValuesList = jLibrosa.loadAndReadAsList(audioFilePath, defaultSampleRate, defaultAudioDuration);
+		
+		splitSongs(audioFeatureValuesList, 0.5);
 		
 		for(int i=0;i<10;i++) {
 			System.out.printf("%.6f%n", audioFeatureValues[i]);
@@ -47,7 +51,7 @@ public class JLibrosaTest {
 		
 		
 
-		double [][] melSpectrogram = jLibrosa.generateMelSpectroGram(audioFeatureValues, sampleRate, 2048, 128, 256);
+		float [][] melSpectrogram = jLibrosa.generateMelSpectroGram(audioFeatureValues, sampleRate, 2048, 128, 256);
 		
 		System.out.println("/n/n");
 		System.out.println("***************************************");
@@ -60,7 +64,9 @@ public class JLibrosaTest {
 		 *equivalent to librosa.feature.mfcc(x, sr, n_mfcc=40) in python
 		 * */
 		
-		double[][] mfccValues = jLibrosa.generateMFCCFeatures(audioFeatureValues, sampleRate, 40);
+		float[][] mfccValues = jLibrosa.generateMFCCFeatures(audioFeatureValues, sampleRate, 40);
+		
+		float[] meanMFCCValues = jLibrosa.generateMeanMFCCFeatures(mfccValues, mfccValues.length, mfccValues[0].length);
 		
 		System.out.println(".......");
 		System.out.println("Size of MFCC Feature Values: (" + mfccValues.length + " , " + mfccValues[0].length + " )");
@@ -80,6 +86,7 @@ public class JLibrosaTest {
 		
 		Complex[][] stftComplexValues = jLibrosa.generateSTFTFeatures(audioFeatureValues, sampleRate, 40);
 		
+		
 		System.out.println(".......");
 		System.out.println("Size of STFT Feature Values: (" + stftComplexValues.length + " , " + stftComplexValues[0].length + " )");
 
@@ -97,22 +104,24 @@ public class JLibrosaTest {
 			}
 	
 	
-	public static void splitSongs(double[] magValues, double overlap) {
+	public static void splitSongs(ArrayList<Float> magValuesList, double overlap) {
 		
 		int chunk = 33000;
+		
+		
+		
 		int offset = (int) (chunk * (1-overlap));
-		int xShape = magValues.length;
+		int xShape = magValuesList.size();
 		int xMax = xShape -chunk + offset;
 		
 		int xRowInd = xMax/offset;
-		double [][] tempArray = new double[xRowInd][offset];
+		ArrayList<List<Float>> tempArray = new ArrayList<List<Float>>();
 		
-		for(int i=0;i<xRowInd;i++) {
-			for(int j=0;j<offset;j++) {
-				int offsetInd = (i*offset) + j;
-				tempArray[i][j]= magValues[offsetInd];
-			}
+		for(int i=0;i<xMax;i+=offset) {
+			tempArray.add(magValuesList.subList(i, i+offset));
 		}
+		
+		
 				
 	}
 	

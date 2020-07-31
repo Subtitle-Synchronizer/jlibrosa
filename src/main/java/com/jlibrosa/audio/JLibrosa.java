@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.complex.Complex;
 
@@ -122,9 +125,9 @@ public class JLibrosa {
 	 * @throws WavFileException
 	 * @throws FileFormatNotSupportedException 
 	 */
-	public double[][] loadAndReadAcrossChannels(String path, int sr, int readDurationInSec)
+	public float[][] loadAndReadAcrossChannels(String path, int sr, int readDurationInSec)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
-		double[][] magValues = readMagnitudeValuesFromFile(path, sr, readDurationInSec);
+		float[][] magValues = readMagnitudeValuesFromFile(path, sr, readDurationInSec);
 		return magValues;
 	}
 
@@ -140,7 +143,7 @@ public class JLibrosa {
 	 * @throws WavFileException
 	 * @throws FileFormatNotSupportedException 
 	 */
-	private double[][] readMagnitudeValuesFromFile(String path, int sampleRate, int readDurationInSeconds)
+	private float[][] readMagnitudeValuesFromFile(String path, int sampleRate, int readDurationInSeconds)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
 		if(!path.endsWith(".wav")) {
@@ -169,7 +172,7 @@ public class JLibrosa {
 
 		// Read the magnitude values across both the channels and save them as part of
 		// multi-dimensional array
-		double[][] buffer = new double[mChannels][mNumFrames];
+		float[][] buffer = new float[mChannels][mNumFrames];
 		int frameOffset = 0;
 		int loopCounter = ((mNumFrames * mChannels) / BUFFER_SIZE) + 1;
 		for (int i = 0; i < loopCounter; i++) {
@@ -193,7 +196,7 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
+	public float[][] generateMFCCFeatures(float[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
 
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
 		
@@ -210,7 +213,7 @@ public class JLibrosa {
 		float [] mfccInput = mfccConvert.extractMFCCFeatures(magValues); //extractMFCCFeatures(magValues);
 		
 		int nFFT = mfccInput.length / nMFCC;
-		double[][] mfccValues = new double[nMFCC][nFFT];
+		float[][] mfccValues = new float[nMFCC][nFFT];
 
 		// loop to convert the mfcc values into multi-dimensional array
 		for (int i = 0; i < nFFT; i++) {
@@ -237,10 +240,10 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public double[][] generateMFCCFeatures(double[] magValues, int mSampleRate, int nMFCC) {
+	public float[][] generateMFCCFeatures(float[] magValues, int mSampleRate, int nMFCC) {
 
 		
-		double[][] mfccValues = this.generateMFCCFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
+		float[][] mfccValues = this.generateMFCCFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
 				
 		return mfccValues;
 		
@@ -254,20 +257,33 @@ public class JLibrosa {
 	 * @param nFFT
 	 * @return
 	 */
-	public float[] generateMeanMFCCFeatures(double[][] mfccValues, int nMFCC, int nFFT) {
+	public float [] generateMeanMFCCFeatures(float[][] mfccValues, int nMFCC, int nFFT) {
 		// code to take the mean of mfcc values across the rows such that
 		// [nMFCC x nFFT] matrix would be converted into
 		// [nMFCC x 1] dimension - which would act as an input to tflite model
+		
+		
+		float [] meanMFCCValues = new float[nMFCC];
+		for (int i=0; i<mfccValues.length; i++) {
+	        
+			float [] floatArrValues = mfccValues[i];
+			DoubleStream ds = IntStream.range(0, floatArrValues.length)
+                    .mapToDouble(k -> floatArrValues[k]);
+			
+	        double avg = DoubleStream.of(ds.toArray()).average().getAsDouble();
+	        float floatVal = (float)avg;
+	        meanMFCCValues[i] = floatVal;
+	    }   
 
-		float[] meanMFCCValues = new float[nMFCC];
-		for (int p = 0; p < nMFCC; p++) {
+		/*for (int p = 0; p < nMFCC; p++) {
 			double fftValAcrossRow = 0;
 			for (int q = 0; q < nFFT; q++) {
 				fftValAcrossRow = fftValAcrossRow + mfccValues[p][q];
 			}
 			double fftMeanValAcrossRow = fftValAcrossRow / nFFT;
 			meanMFCCValues[p] = (float) fftMeanValAcrossRow;
-		}
+		} */
+		
 		return meanMFCCValues;
 	}
 
@@ -278,7 +294,7 @@ public class JLibrosa {
 	 * @param yValues - audio magnitude values
 	 * @return
 	 */
-	public double[][] generateMelSpectroGram(double[] yValues){
+	public double[][] generateMelSpectroGram(float[] yValues){
 		
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
 		double [][] melSpectrogram = mfccConvert.melSpectrogram(yValues);
@@ -298,13 +314,13 @@ public class JLibrosa {
 	 * @param hop_length
 	 * @return
 	 */
-	public double[][] generateMelSpectroGram(double[] yValues, int mSampleRate, int n_fft, int n_mels, int hop_length){
+	public float[][] generateMelSpectroGram(float[] yValues, int mSampleRate, int n_fft, int n_mels, int hop_length){
 		AudioFeatureExtraction mfccConvert = new AudioFeatureExtraction();
 		mfccConvert.setSampleRate(mSampleRate);
 		mfccConvert.setN_fft(n_fft);
 		mfccConvert.setN_mels(n_mels);
 		mfccConvert.setHop_length(hop_length);
-		double [][] melSVal = mfccConvert.melSpectrogramWithComplexValueProcessing(yValues);
+		float [][] melSVal = mfccConvert.melSpectrogramWithComplexValueProcessing(yValues);
 		return melSVal;
 	}
 	
@@ -318,7 +334,7 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
+	public Complex [][] generateSTFTFeatures(float[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
 		AudioFeatureExtraction featureExtractor = new AudioFeatureExtraction();
 		featureExtractor.setN_fft(n_fft);
 		featureExtractor.setN_mels(n_mels);
@@ -344,7 +360,7 @@ public class JLibrosa {
 	 * @param nMFCC
 	 * @return
 	 */
-	public Complex [][] generateSTFTFeatures(double[] magValues, int mSampleRate, int nMFCC) {
+	public Complex [][] generateSTFTFeatures(float[] magValues, int mSampleRate, int nMFCC) {
 		
 		Complex [][] stftValues = this.generateSTFTFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
 		return stftValues;
@@ -363,10 +379,10 @@ public class JLibrosa {
 	 * @throws WavFileException
 	 * @throws FileFormatNotSupportedException 
 	 */
-	public double[] loadAndRead(String path, int sampleRate, int readDurationInSeconds)
+	public float[] loadAndRead(String path, int sampleRate, int readDurationInSeconds)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
-		double[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
+		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
 
 		DecimalFormat df = new DecimalFormat("#.#####");
 		df.setRoundingMode(RoundingMode.CEILING);
@@ -376,17 +392,65 @@ public class JLibrosa {
 		
 		// take the mean of amplitude values across all the channels and convert the
 		// signal to mono mode
-		double[] meanBuffer = new double[mNumFrames];
+		
+		float[] meanBuffer = new float[mNumFrames];
+				
+		
 		for (int q = 0; q < mNumFrames; q++) {
 			double frameVal = 0;
 			for (int p = 0; p < mChannels; p++) {
 				frameVal = frameVal + magValueArray[p][q];
 			}
-			meanBuffer[q] = Double.parseDouble(df.format(frameVal / mChannels));
+			meanBuffer[q] = Float.parseFloat(df.format(frameVal / mChannels));
 		}
 
 		return meanBuffer;
 
+		
 	}
 
+	
+	
+	/**
+	 * This function loads the audio file, reads its Numeric Magnitude Feature
+	 * values and then takes the mean of amplitude values across all the channels and
+	 * convert the signal to mono mode
+	 * 
+	 * @param path
+	 * @param sampleRate
+	 * @param readDurationInSeconds
+	 * @return
+	 * @throws IOException
+	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
+	 */
+	public ArrayList<Float> loadAndReadAsList(String path, int sampleRate, int readDurationInSeconds)
+			throws IOException, WavFileException, FileFormatNotSupportedException {
+
+		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
+
+		DecimalFormat df = new DecimalFormat("#.#####");
+		df.setRoundingMode(RoundingMode.CEILING);
+
+		int mNumFrames = this.getNoOfFrames();
+		int mChannels = this.getNoOfChannels();
+		
+		// take the mean of amplitude values across all the channels and convert the
+		// signal to mono mode
+		float[] meanBuffer = new float[mNumFrames];
+		ArrayList<Float> meanBufferList = new ArrayList<Float>();
+		for (int q = 0; q < mNumFrames; q++) {
+			double frameVal = 0;
+			for (int p = 0; p < mChannels; p++) {
+				frameVal = frameVal + magValueArray[p][q];
+			}
+			meanBufferList.add(Float.parseFloat(df.format(frameVal / mChannels)));
+			
+		}
+
+		return meanBufferList;
+
+	}
+	
+	
 }

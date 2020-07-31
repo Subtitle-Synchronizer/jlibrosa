@@ -108,7 +108,7 @@ public class AudioFeatureExtraction {
 	 * @param doubleInputBuffer
 	 * @return
 	 */
-	public float[] extractMFCCFeatures(double[] doubleInputBuffer) {
+	public float[] extractMFCCFeatures(float[] doubleInputBuffer) {
 		final double[][] mfccResult = dctMfcc(doubleInputBuffer);
 		return finalshape(mfccResult);
 	}
@@ -137,7 +137,7 @@ public class AudioFeatureExtraction {
 	 * @param y
 	 * @return
 	 */
-	private double[][] dctMfcc(double[] y) {
+	private double[][] dctMfcc(float[] y) {
 		final double[][] specTroGram = powerToDb(melSpectrogram(y));
 		final double[][] dctBasis = dctFilter(n_mfcc, n_mels);
 		double[][] mfccSpecTro = new double[n_mfcc][specTroGram[0].length];
@@ -157,7 +157,7 @@ public class AudioFeatureExtraction {
 	 * @param y
 	 * @return
 	 */
-	public double[][] melSpectrogram(double[] y) {
+	public double[][] melSpectrogram(float[] y) {
 		double[][] melBasis = melFilter();
 		double[][] spectro = extractSTFTFeatures(y);
 		double[][] melS = new double[melBasis.length][spectro[0].length];
@@ -179,7 +179,7 @@ public class AudioFeatureExtraction {
 	 * @param y
 	 * @return
 	 */
-	public double [][] melSpectrogramWithComplexValueProcessing(double[] y) {
+	public float [][] melSpectrogramWithComplexValueProcessing(float[] y) {
 		
 		Complex[][] spectro = extractSTFTFeaturesAsComplexValues(y);
 		double[][] spectroAbsVal = new double[spectro.length][spectro[0].length];
@@ -194,7 +194,7 @@ public class AudioFeatureExtraction {
 		
 		System.out.println("test");
 		double[][] melBasis = melFilter();
-		double[][] melS = new double[melBasis.length][spectro[0].length];
+		float[][] melS = new float[melBasis.length][spectro[0].length];
 		for (int i = 0; i < melBasis.length; i++) {
 			for (int j = 0; j < spectro[0].length; j++) {
 				for (int k = 0; k < melBasis[0].length; k++) {
@@ -275,7 +275,7 @@ public class AudioFeatureExtraction {
 	 * @return
 	 */
 	
-	public Complex[][] extractSTFTFeaturesAsComplexValues(double[] y){
+	public Complex[][] extractSTFTFeaturesAsComplexValues(float[] y){
 		
 		// Short-time Fourier transform (STFT)
 		final double[] fftwin = getWindow();
@@ -328,7 +328,7 @@ public class AudioFeatureExtraction {
 	 * @return
 	 */
 	
-	private double[][] padFrame(double[] yValues){
+	private double[][] padFrame(float[] yValues){
 		double[] ypad = new double[n_fft + yValues.length];
 		for (int i = 0; i < n_fft / 2; i++) {
 			ypad[(n_fft / 2) - i - 1] = yValues[i + 1];
@@ -348,7 +348,7 @@ public class AudioFeatureExtraction {
 	 * @param y
 	 * @return
 	 */
-	public double[][] extractSTFTFeatures(double[] y) {
+	public double[][] extractSTFTFeatures(float[] y) {
 		// Short-time Fourier transform (STFT)
 		final double[] fftwin = getWindow();
 		

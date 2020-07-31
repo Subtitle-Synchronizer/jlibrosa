@@ -310,7 +310,7 @@ public class WavFile {
      * @throws IOException
      * @throws WavFileException
      */
-    public int readFrames(double[][] sampleBuffer, int numFramesToRead, int frameOffset) throws IOException, WavFileException {
+    public int readFrames(float[][] sampleBuffer, int numFramesToRead, int frameOffset) throws IOException, WavFileException {
         return readFramesInternal(sampleBuffer, frameOffset, numFramesToRead);
     }
 
@@ -323,14 +323,14 @@ public class WavFile {
      * @throws IOException
      * @throws WavFileException
      */
-    private int readFramesInternal(double[][] sampleBuffer, int frameOffset, int numFramesToRead) throws IOException, WavFileException {
+    private int readFramesInternal(float[][] sampleBuffer, int frameOffset, int numFramesToRead) throws IOException, WavFileException {
         if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
 
         for (int f = 0; f < numFramesToRead; f++) {
             if (frameCounter == numFrames) return frameOffset;
 
             for (int c = 0; c < numChannels; c++) {
-                sampleBuffer[c][frameOffset] = (double) readSample();
+                sampleBuffer[c][frameOffset] = (float) readSample();
 
             }
             frameCounter++;
