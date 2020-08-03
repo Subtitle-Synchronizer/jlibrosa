@@ -32,7 +32,6 @@ public class JLibrosaTest {
 		
 		ArrayList<Float> audioFeatureValuesList = jLibrosa.loadAndReadAsList(audioFilePath, defaultSampleRate, defaultAudioDuration);
 		
-		splitSongs(audioFeatureValuesList, 0.5);
 		
 		for(int i=0;i<10;i++) {
 			System.out.printf("%.6f%n", audioFeatureValues[i]);
@@ -104,26 +103,7 @@ public class JLibrosaTest {
 			}
 	
 	
-	public static void splitSongs(ArrayList<Float> magValuesList, double overlap) {
-		
-		int chunk = 33000;
-		
-		
-		
-		int offset = (int) (chunk * (1-overlap));
-		int xShape = magValuesList.size();
-		int xMax = xShape -chunk + offset;
-		
-		int xRowInd = xMax/offset;
-		ArrayList<List<Float>> tempArray = new ArrayList<List<Float>>();
-		
-		for(int i=0;i<xMax;i+=offset) {
-			tempArray.add(magValuesList.subList(i, i+offset));
-		}
-		
-		
-				
-	}
+	
 	
 
 }
