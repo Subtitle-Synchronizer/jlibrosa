@@ -18,8 +18,11 @@ As of current version, jLibrosa supports the processing of .wav file only.
 With regard to feature extraction, following features are being supported in its current version:
 
 --> Load and read magnitude values of audio file
+
 --> Generate mfcc feature values
+
 --> Generate MelSpectrogram values
+
 --> Generate STFT feature values
 
 Pls refer jLibrosaTest.java (under 'src/test/java/com/jlibrosa/audio' directory) files for the more details about how to generate above features from audio files. 
