@@ -158,14 +158,17 @@ public class JLibrosa {
 		int mSampleRate = (int) wavFile.getSampleRate();
 		int mChannels = wavFile.getNumChannels();
 
+		if (readDurationInSeconds != -1) {
+			mNumFrames = readDurationInSeconds * mSampleRate;
+			wavFile.setNumFrames(mNumFrames);
+		}
+
+		
 		this.setNoOfChannels(mChannels);
 		this.setNoOfFrames(mNumFrames);
 		this.setSampleRate(mSampleRate);
 		
-		if (readDurationInSeconds != -1) {
-			mNumFrames = readDurationInSeconds * mSampleRate;
-		}
-
+		
 		if (sampleRate != -1) {
 			mSampleRate = sampleRate;
 		}
@@ -335,6 +338,21 @@ public class JLibrosa {
 	 * @return
 	 */
 	public Complex [][] generateSTFTFeatures(float[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
+		Complex [][] stftValues = this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, true);
+		return stftValues;
+	}
+
+	
+	
+	/**
+	 * This function calculates and returns the STFT values of given Audio Sample
+	 * values with/without applying padding as one of the argument flag. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public Complex [][] generateSTFTFeaturesWithPadOption(float[] magValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length, boolean paddingFlag) {
 		AudioFeatureExtraction featureExtractor = new AudioFeatureExtraction();
 		featureExtractor.setN_fft(n_fft);
 		featureExtractor.setN_mels(n_mels);
@@ -346,10 +364,86 @@ public class JLibrosa {
 		
 		featureExtractor.setSampleRate(mSampleRate);
 		featureExtractor.setN_mfcc(nMFCC);
-		Complex [][] stftValues = featureExtractor.extractSTFTFeaturesAsComplexValues(magValues);
+		Complex [][] stftValues = featureExtractor.extractSTFTFeaturesAsComplexValues(magValues, paddingFlag);
 		return stftValues;
 	}
-
+	
+	
+	
+	
+	
+	
+	/**
+	 * This function calculates and returns the inverse STFT values of given stft values
+	 * values. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public float [] generateInvSTFTFeatures(Complex [][] stftValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length) {
+		float [] magValues = this.generateInvSTFTFeaturesWithPadOption(stftValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, -1, false);
+		return magValues;
+	}
+	
+	
+	
+	
+	/**
+	 * This function calculates and returns the inverse STFT values of given stft values
+	 * values. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public float [] generateInvSTFTFeatures(Complex [][] stftValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length, int length) {
+		float [] magValues = this.generateInvSTFTFeaturesWithPadOption(stftValues, mSampleRate, nMFCC, n_fft, n_mels, hop_length, length, false);
+		return magValues;
+	}
+	
+	/**
+	 * This function calculates and returns the inverse STFT values of given stft values
+	 * values. STFT stands for Short Term Fourier Transform
+	 * This function to be used for getting inverse STFT if STFT values have been generated with pad values.
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public float [] generateInvSTFTFeaturesWithPadOption(Complex [][] stftValues, int mSampleRate, int nMFCC, int n_fft, int n_mels, int hop_length, int length, boolean paddingFlag) {
+		AudioFeatureExtraction featureExtractor = new AudioFeatureExtraction();
+		featureExtractor.setN_fft(n_fft);
+		featureExtractor.setN_mels(n_mels);
+		featureExtractor.setHop_length(hop_length);
+		featureExtractor.setLength(length);
+		
+		if(mSampleRate == -1) {
+			mSampleRate = this.getSampleRate();
+		}
+		
+		featureExtractor.setSampleRate(mSampleRate);
+		featureExtractor.setN_mfcc(nMFCC);
+		float [] magValues = featureExtractor.extractInvSTFTFeaturesAsFloatValues(stftValues, paddingFlag);
+		return magValues;
+	}
+	
+	
+	
+	/**
+	 * This function calculates and returns the inverse STFT values of given STFT Complex
+	 * values. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public float [] generateInvSTFTFeatures(Complex [][] stftValues, int mSampleRate, int nMFCC) {
+		
+		float [] magValues = this.generateInvSTFTFeatures(stftValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
+		return magValues;
+	}
+	
 	
 	
 	/**
@@ -363,6 +457,21 @@ public class JLibrosa {
 	public Complex [][] generateSTFTFeatures(float[] magValues, int mSampleRate, int nMFCC) {
 		
 		Complex [][] stftValues = this.generateSTFTFeatures(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length);
+		return stftValues;
+	}
+	
+	
+	/**
+	 * This function calculates and returns the STFT values of given Audio Sample
+	 * values. STFT stands for Short Term Fourier Transform
+	 * 
+	 * @param magValues
+	 * @param nMFCC
+	 * @return
+	 */
+	public Complex [][] generateSTFTFeaturesWithPadOption(float[] magValues, int mSampleRate, int nMFCC, boolean padFlag) {
+		
+		Complex [][] stftValues = this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length, padFlag);
 		return stftValues;
 	}
 
@@ -409,6 +518,39 @@ public class JLibrosa {
 		
 	}
 
+	
+	
+	/**
+	 * This function loads the audio file, reads its Numeric Magnitude Feature
+	 * values and then takes the mean of amplitude values across all the channels and
+	 * convert the signal to mono mode
+	 * 
+	 * @param path
+	 * @param sampleRate
+	 * @param readDurationInSeconds
+	 * @return
+	 * @throws IOException
+	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
+	 */
+	public float[][] loadAndReadStereo(String path, int sampleRate, int readDurationInSeconds)
+			throws IOException, WavFileException, FileFormatNotSupportedException {
+
+		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
+		int mNumFrames = this.getNoOfFrames();
+
+		float[][] stereoAudioArray = new float[2][mNumFrames];
+		
+		for(int i=0;i<magValueArray.length;i++) {
+			stereoAudioArray[i]=Arrays.copyOfRange(magValueArray[i], 0, mNumFrames);
+		}
+		return stereoAudioArray;
+
+		
+	}
+	
+	
+	
 	
 	
 	/**

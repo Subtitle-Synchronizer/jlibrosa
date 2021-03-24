@@ -60,6 +60,10 @@ public class WavFile {
     public long getNumFrames() {
         return numFrames;
     }
+    
+    public void setNumFrames(long nNumFrames) {
+        this.numFrames = nNumFrames;
+    }
 
     public long getFramesRemaining() {
         return numFrames - frameCounter;

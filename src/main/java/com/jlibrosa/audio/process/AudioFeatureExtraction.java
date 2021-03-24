@@ -23,7 +23,7 @@ public class AudioFeatureExtraction {
 	private double sampleRate = 44100.0;
 
 	
-	
+	private int length = -1;
 	private double fMax = sampleRate / 2.0;
 	private double fMin = 0.0;
 	private int n_fft = 2048;
@@ -43,6 +43,14 @@ public class AudioFeatureExtraction {
 	public void setSampleRate(double sampleRateVal) {
 		sampleRate = sampleRateVal;
 		this.fMax = this.sampleRate/2.0;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	public void setLength(int length) {
+		this.length = length;
 	}
 
 	public double getfMax() {
@@ -181,7 +189,7 @@ public class AudioFeatureExtraction {
 	 */
 	public float [][] melSpectrogramWithComplexValueProcessing(float[] y) {
 		
-		Complex[][] spectro = extractSTFTFeaturesAsComplexValues(y);
+		Complex[][] spectro = extractSTFTFeaturesAsComplexValues(y, true);
 		double[][] spectroAbsVal = new double[spectro.length][spectro[0].length];
 		
 		for(int i=0;i<spectro.length;i++) {
@@ -192,7 +200,6 @@ public class AudioFeatureExtraction {
 			}
 		}
 		
-		System.out.println("test");
 		double[][] melBasis = melFilter();
 		float[][] melS = new float[melBasis.length][spectro[0].length];
 		for (int i = 0; i < melBasis.length; i++) {
@@ -222,7 +229,8 @@ public class AudioFeatureExtraction {
 			ypad[(n_fft/2)+j] = y[j];
 		}
 
-
+		y = null;
+		
 		final double[][] frame = yFrame(ypad);
 		double[][] fftmagSpec = new double[1+n_fft/2][frame[0].length];
 		double[] fftFrame = new double[n_fft];
@@ -275,20 +283,23 @@ public class AudioFeatureExtraction {
 	 * @return
 	 */
 	
-	public Complex[][] extractSTFTFeaturesAsComplexValues(float[] y){
+	public Complex[][] extractSTFTFeaturesAsComplexValues(float[] y, boolean paddingFlag) {
 		
 		// Short-time Fourier transform (STFT)
 		final double[] fftwin = getWindow();
-				
+		
 		// pad y with reflect mode so it's centered. This reflect padding implementation
 				// is
-		final double[][] frame = padFrame(y);
+		final double[][] frame = padFrame(y, paddingFlag);
 		double[][] fftmagSpec = new double[1 + n_fft / 2][frame[0].length];
 
 		double[] fftFrame = new double[n_fft];	
 		
 		Complex [][] complex2DArray = new Complex[1+n_fft/2][frame[0].length];
+		Complex [] cmplx1DArr = new Complex [n_fft];
 		
+		
+		float [][] invFrame = new float [n_fft][frame[0].length];
 		
 		for (int k = 0; k < frame[0].length; k++) {
 			int fftFrameCounter = 0;
@@ -305,21 +316,177 @@ public class AudioFeatureExtraction {
 			try {
 				Complex[] complx = transformer.transform(fftFrame, TransformType.FORWARD);
 				
+				Complex[] Invcomplx = transformer.transform(complx, TransformType.INVERSE);
+				
+				//FFT transformed data will be over the length of FFT
+				//data will be sinusoidal in nature - so taking the values of 1+n_fft/2 only for processing
 				for(int i=0;i<1+n_fft/2;i++) {
 					complex2DArray[i][k] = complx[i];
+					
 				}
 				
 				
-			
+				
+				Complex [] cmplxINV1DArr = new Complex [n_fft];
+				
+				
+				for(int j=0;j<1+n_fft/2;j++) {
+					cmplxINV1DArr[j] = complex2DArray[j][k];
+				}
+				
+				int j_index = 2;
+				for(int k1=1+n_fft/2;k1<n_fft;k1++){
+					cmplxINV1DArr[k1]=new Complex(cmplxINV1DArr[k1-j_index].getReal(), -1 * cmplxINV1DArr[k1-j_index].getImaginary());
+					j_index = j_index + 2;
+				}
+				
+				Complex[] complx1 = transformer.transform(cmplxINV1DArr, TransformType.INVERSE);
+				
+				
+				for(int p=0;p<complx1.length;p++) {
+					if(fftwin[p]!=0) {
+						invFrame[p][k] = (float) (complx1[p].getReal()/fftwin[p]);
+						//invFrame[p][i] = (float) (complx[p].getReal() * fftwin[p]);
+					}else {
+						invFrame[p][k] = 0;
+					}
+				}
+				
+				
 			} catch (IllegalArgumentException e) {
 				System.out.println(e);
 			}		
 			
 		}
+		
+		
+		float [] yValues = new float [(hop_length * (invFrame[0].length-1) + n_fft)];
+		
+		for (int i = 0; i < n_fft; i++) {
+			for (int j = 0; j < invFrame[0].length; j++) {
+				yValues[j*hop_length + i] = invFrame[i][j];
+				
+			}
+		}
+		
+		
 		return complex2DArray;
 		
 	} 
 	
+	
+	/**
+	 * This function extracts the inverse STFT values as complex values
+	 * 
+	 * @param y
+	 * @return
+	 */
+	
+	public float [] extractInvSTFTFeaturesAsFloatValues(Complex[][] cmplxSTFTValues, boolean paddingFlag){
+		
+		int n_fft = 2 *(cmplxSTFTValues.length - 1);
+		
+		
+		int n_frames = cmplxSTFTValues[0].length;
+		
+		
+		int length =  ((n_frames - 1) * hop_length) + n_fft;
+		
+		if(this.length != -1) {
+			length = this.length;
+		}
+		
+		// Short-time Fourier transform (STFT)
+		final double[] fftwin = getWindow();
+		
+		float [][] invFrame = new float [n_fft][n_frames];
+		
+		Complex[] complx = null;
+		
+		for(int i=0;i<cmplxSTFTValues[0].length;i++) {
+			Complex [] cmplx1DArr = new Complex [n_fft];
+			for(int j=0;j<1+n_fft/2;j++) {
+				cmplx1DArr[j] = cmplxSTFTValues[j][i];
+			}
+			
+			//processed FFT values would be of length 1+n_fft/2
+			//to peform inv FFT, we need to recreate the values back to the length of n_fft
+			//as the values are inverse in nature - recreating the second half from the first off
+			//for n_fft value of 4096 - value at the index of 2049 and 2047 will be same and the sequence will continue for (2050-2046), (2051-2045) etc
+			//below loop will recreate those values
+			int j_index = 2;
+			for(int k=1+n_fft/2;k<n_fft;k++){
+				cmplx1DArr[k]=new Complex(cmplx1DArr[k-j_index].getReal(), -1 * cmplx1DArr[k-j_index].getImaginary());
+				j_index = j_index + 2;
+			}
+			
+			
+			FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+			
+			
+			try {
+				complx = transformer.transform(cmplx1DArr, TransformType.INVERSE);
+			
+			} catch (IllegalArgumentException e) {
+				System.out.println(e);
+			}		
+		
+			for(int p=0;p<complx.length;p++) {
+				if(fftwin[p]!=0) {
+					invFrame[p][i] = (float) (complx[p].getReal()/fftwin[p]);
+					//invFrame[p][i] = (float) (complx[p].getReal() * fftwin[p]);
+				}else {
+					invFrame[p][i] = 0;
+				}
+			}
+			
+		}
+		
+		
+		float [] yValues = new float [length];
+		
+		for (int i = 0; i < n_fft; i++) {
+			for (int j = 0; j < n_frames; j++) {
+				yValues[j*hop_length + i] = invFrame[i][j];
+				
+			}
+		}
+		
+		
+	
+		float [] yValues_unpadded = new float[yValues.length-n_fft];
+		
+		if(paddingFlag) {
+			
+			for(int i=0;i<yValues_unpadded.length;i++) {
+				yValues_unpadded[i] = yValues[n_fft/2 + i];
+			}
+			
+			return yValues_unpadded;
+		}
+		
+		
+		return yValues;
+		
+	} 
+	
+	
+	private double [][] padCenter(double [] fftwin, int size) {
+		
+		int n = fftwin.length;
+		
+		int lpad = ((size - n)/2);
+		
+		//this is a temp way for padding...this code needs to be updated as per pad_center method of istft function
+		
+		double [][] fftWin2D = new double [n][1];
+		
+		for(int i=0;i<n;i++) {
+			fftWin2D[i][0]= fftwin[i];
+		}
+		
+		return fftWin2D;
+	}
 	
 	/**
 	 * This function pads the y values
@@ -328,7 +495,13 @@ public class AudioFeatureExtraction {
 	 * @return
 	 */
 	
-	private double[][] padFrame(float[] yValues){
+	private double[][] padFrame(float[] yValues, boolean paddingFlag){
+		
+		double[][] frame = null;
+		
+		if(paddingFlag) {
+			
+		
 		double[] ypad = new double[n_fft + yValues.length];
 		for (int i = 0; i < n_fft / 2; i++) {
 			ypad[(n_fft / 2) - i - 1] = yValues[i + 1];
@@ -338,7 +511,21 @@ public class AudioFeatureExtraction {
 			ypad[(n_fft / 2) + j] = yValues[j];
 		}
 
-		final double[][] frame = yFrame(ypad);
+		frame = yFrame(ypad);
+		}
+		else {
+		
+		
+		double[] yDblValues = new double[yValues.length];
+		for (int i = 0 ; i < yValues.length; i++)
+		{
+		    yDblValues[i] = (double) yValues[i];
+		}
+		
+		frame = yFrame(yDblValues);
+		
+		}
+		
 		return frame;
 	}
 	
@@ -354,7 +541,7 @@ public class AudioFeatureExtraction {
 		
 		// pad y with reflect mode so it's centered. This reflect padding implementation
 		// is
-		final double[][] frame = padFrame(y);
+		final double[][] frame = padFrame(y, true);
 		double[][] fftmagSpec = new double[1 + n_fft / 2][frame[0].length];
 
 		double[] fftFrame = new double[n_fft];
@@ -371,8 +558,11 @@ public class AudioFeatureExtraction {
 
 			FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
 		
+			
+			
 			try {
 				Complex[] complx = transformer.transform(fftFrame, TransformType.FORWARD);
+				
 				for (int i = 0; i < complx.length; i++) {
 					double rr = (complx[i].getReal());
 
@@ -419,8 +609,11 @@ public class AudioFeatureExtraction {
 	 * @return
 	 */
 	private double[][] yFrame(double[] ypad) {
+		
 		final int n_frames = 1 + (ypad.length - n_fft) / hop_length;
+		
 		double[][] winFrames = new double[n_fft][n_frames];
+		
 		for (int i = 0; i < n_fft; i++) {
 			for (int j = 0; j < n_frames; j++) {
 				winFrames[i][j] = ypad[j * hop_length + i];
