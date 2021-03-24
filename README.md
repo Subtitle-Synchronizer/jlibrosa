@@ -25,6 +25,8 @@ With regard to feature extraction, following features are being supported in its
 
 --> Generate STFT feature values
 
+--> Generate iSTFT feature values
+
 Pls refer jLibrosaTest.java (under 'src/test/java/com/jlibrosa/audio' directory) files for the more details about how to generate above features from audio files. 
 
 # Comparison with Python Librosa
