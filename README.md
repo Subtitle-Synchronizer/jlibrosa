@@ -8,6 +8,7 @@ jLibrosa helps in performing similar kind of processing and to generate the afor
 
 jLibrosa could be used in Android environment, so Deep Learning models built in Tensorflow and ported to TFLite could be leveraged in Android environment for building mobile apps.
 
+Compiled binaries are available under the directory binaries for your usage.
 
 # Available processing features
 
