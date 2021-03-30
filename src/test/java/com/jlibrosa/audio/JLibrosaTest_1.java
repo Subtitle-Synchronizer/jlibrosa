@@ -35,7 +35,9 @@ public class JLibrosaTest_1 {
 
 		/* To read the magnitude values of audio files - equivalent to librosa.load('../audioFiles/1995-1826-0003.wav', sr=None) function */
 		
-		float audioFeatureValues [] = jLibrosa.loadAndRead(audioFilePath, defaultSampleRate, defaultAudioDuration);
+		float audioFeatureValues [] = jLibrosa.loadAndReadWithOffset(audioFilePath, defaultSampleRate, defaultAudioDuration, 10);
+		
+		float audioFeatureValues1 [] = jLibrosa.loadAndReadWithOffset(audioFilePath, defaultSampleRate, 15, 0);
 		
 		ArrayList<Float> audioFeatureValuesList = jLibrosa.loadAndReadAsList(audioFilePath, defaultSampleRate, defaultAudioDuration);
 		
