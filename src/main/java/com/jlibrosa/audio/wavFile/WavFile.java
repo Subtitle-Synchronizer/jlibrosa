@@ -25,9 +25,18 @@ public class WavFile {
     private final static int RIFF_TYPE_ID = 0x45564157;
 
     private File file;                        // File that will be read from or written to
-    private IOState ioState;                // Specifies the IO State of the Wav File (used for snaity checking)
+    public long getTotalNumFrames() {
+		return totalNumFrames;
+	}
+
+	public void setTotalNumFrames(long totalNumFrames) {
+		this.totalNumFrames = totalNumFrames;
+	}
+
+	private IOState ioState;                // Specifies the IO State of the Wav File (used for snaity checking)
     private int bytesPerSample;            // Number of bytes required to store a single sample
     private long numFrames;                    // Number of frames within the data section
+    private long totalNumFrames;
     private FileOutputStream oStream;    // Output stream used for writting data
     private FileInputStream iStream;        // Input stream used for reading data
     private float floatScale;                // Scaling factor used for int <-> float conversion
@@ -219,6 +228,7 @@ public class WavFile {
         wavFile.bytesRead = 0;
         wavFile.frameCounter = 0;
         wavFile.ioState = IOState.READING;
+        wavFile.totalNumFrames = wavFile.numFrames;
 
         return wavFile;
     }
@@ -314,7 +324,7 @@ public class WavFile {
      * @throws IOException
      * @throws WavFileException
      */
-    public int readFrames(float[][] sampleBuffer, int numFramesToRead, int frameOffset) throws IOException, WavFileException {
+    public long readFrames(float[][] sampleBuffer, int numFramesToRead, int frameOffset) throws IOException, WavFileException {
         return readFramesInternal(sampleBuffer, frameOffset, numFramesToRead);
     }
 
@@ -327,22 +337,31 @@ public class WavFile {
      * @throws IOException
      * @throws WavFileException
      */
-    private int readFramesInternal(float[][] sampleBuffer, int frameOffset, int numFramesToRead) throws IOException, WavFileException {
+    private long readFramesInternal(float[][] sampleBuffer, int frameOffset, int numFramesToRead) throws IOException, WavFileException {
         if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
-
-        for (int f = 0; f < numFramesToRead; f++) {
-            if (frameCounter == numFrames) return frameOffset;
-
+        
+        int readFrameCounter = 0;
+        for (int f = 0; f < totalNumFrames; f++) {
+            if (readFrameCounter == numFramesToRead) return readFrameCounter;
+            
+            //if(frameCounter==totalNumFrames) return readFrameCounter;
+            
             for (int c = 0; c < numChannels; c++) {
-                sampleBuffer[c][frameOffset] = (float) readSample();
+            	float magValue = (float) readSample();
+            	if(f>=frameOffset) {
+            		sampleBuffer[c][readFrameCounter] = magValue;
+            	}
 
             }
-            frameCounter++;
-            frameOffset++;
-
+            
+            if(f>=frameOffset) {
+            	readFrameCounter++;
+            }
+            
+            
         }
 
-        return frameOffset;
+        return readFrameCounter;
     }
 
     /**

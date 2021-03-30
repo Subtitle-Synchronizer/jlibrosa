@@ -109,7 +109,23 @@ public class JLibrosa {
 	}
 
 
-
+	/**
+	 * This function is used to load the audio file and read its Numeric Magnitude
+	 * Feature Values.
+	 * 
+	 * @param path
+	 * @param sr
+	 * @param readDurationInSec
+	 * @return
+	 * @throws IOException
+	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
+	 */
+	public float[][] loadAndReadAcrossChannelsWithOffset(String path, int sr, int readDurationInSec, int offsetDuration)
+			throws IOException, WavFileException, FileFormatNotSupportedException {
+		float[][] magValues = readMagnitudeValuesFromFile(path, sr, readDurationInSec, offsetDuration);
+		return magValues;
+	}
 	
 
 
@@ -127,7 +143,7 @@ public class JLibrosa {
 	 */
 	public float[][] loadAndReadAcrossChannels(String path, int sr, int readDurationInSec)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
-		float[][] magValues = readMagnitudeValuesFromFile(path, sr, readDurationInSec);
+		float[][] magValues = loadAndReadAcrossChannelsWithOffset(path, sr, readDurationInSec, 0);
 		return magValues;
 	}
 
@@ -143,7 +159,7 @@ public class JLibrosa {
 	 * @throws WavFileException
 	 * @throws FileFormatNotSupportedException 
 	 */
-	private float[][] readMagnitudeValuesFromFile(String path, int sampleRate, int readDurationInSeconds)
+	private float[][] readMagnitudeValuesFromFile(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
 		if(!path.endsWith(".wav")) {
@@ -158,8 +174,16 @@ public class JLibrosa {
 		int mSampleRate = (int) wavFile.getSampleRate();
 		int mChannels = wavFile.getNumChannels();
 
+		int totalNoOfFrames = mNumFrames;
+		int frameOffset = offsetDuration * mSampleRate;
+		int tobeReadFrames = readDurationInSeconds * mSampleRate;
+		
+		if(tobeReadFrames > (totalNoOfFrames - frameOffset)) {
+			tobeReadFrames = totalNoOfFrames - frameOffset;
+		}
+		
 		if (readDurationInSeconds != -1) {
-			mNumFrames = readDurationInSeconds * mSampleRate;
+			mNumFrames = tobeReadFrames;
 			wavFile.setNumFrames(mNumFrames);
 		}
 
@@ -175,12 +199,12 @@ public class JLibrosa {
 
 		// Read the magnitude values across both the channels and save them as part of
 		// multi-dimensional array
+		
 		float[][] buffer = new float[mChannels][mNumFrames];
-		int frameOffset = 0;
-		int loopCounter = ((mNumFrames * mChannels) / BUFFER_SIZE) + 1;
-		for (int i = 0; i < loopCounter; i++) {
-			frameOffset = wavFile.readFrames(buffer, mNumFrames, frameOffset);
-		}
+		long readFrameCount = 0;
+		//for (int i = 0; i < loopCounter; i++) {
+		readFrameCount = wavFile.readFrames(buffer, mNumFrames, frameOffset);
+		//}
 
 		if(wavFile != null) {
 			wavFile.close();
@@ -474,24 +498,26 @@ public class JLibrosa {
 		Complex [][] stftValues = this.generateSTFTFeaturesWithPadOption(magValues, mSampleRate, nMFCC, this.n_fft, this.n_mels, this.hop_length, padFlag);
 		return stftValues;
 	}
-
+	
 	/**
 	 * This function loads the audio file, reads its Numeric Magnitude Feature
 	 * values and then takes the mean of amplitude values across all the channels and
-	 * convert the signal to mono mode
+	 * convert the signal to mono mode by taking the average. This method reads the audio file
+	 * post the mentioned offset duration in seconds.
 	 * 
 	 * @param path
 	 * @param sampleRate
 	 * @param readDurationInSeconds
+	 * @param offsetDuration
 	 * @return
 	 * @throws IOException
 	 * @throws WavFileException
 	 * @throws FileFormatNotSupportedException 
 	 */
-	public float[] loadAndRead(String path, int sampleRate, int readDurationInSeconds)
+	
+	public float[] loadAndReadWithOffset(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
-
-		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
+		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds, offsetDuration);
 
 		DecimalFormat df = new DecimalFormat("#.#####");
 		df.setRoundingMode(RoundingMode.CEILING);
@@ -514,10 +540,62 @@ public class JLibrosa {
 		}
 
 		return meanBuffer;
+		
+	}
+	
+	
 
+	/**
+	 * This function loads the audio file, reads its Numeric Magnitude Feature
+	 * values and then takes the mean of amplitude values across all the channels and
+	 * convert the signal to mono mode
+	 * 
+	 * @param path
+	 * @param sampleRate
+	 * @param readDurationInSeconds
+	 * @return
+	 * @throws IOException
+	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
+	 */
+	public float[] loadAndRead(String path, int sampleRate, int readDurationInSeconds)
+			throws IOException, WavFileException, FileFormatNotSupportedException {
+
+		float[] meanBuffer = loadAndReadWithOffset(path, sampleRate, readDurationInSeconds, 0);
+		return meanBuffer;
 		
 	}
 
+	
+	/**
+	 * This function loads the audio file, reads its Numeric Magnitude Feature
+	 * values and then takes the mean of amplitude values across all the channels and
+	 * convert the signal to mono mode
+	 * 
+	 * @param path
+	 * @param sampleRate
+	 * @param readDurationInSeconds
+	 * @return
+	 * @throws IOException
+	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
+	 */
+	public float[][] loadAndReadStereoWithOffset(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
+			throws IOException, WavFileException, FileFormatNotSupportedException {
+
+		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds, offsetDuration);
+		int mNumFrames = this.getNoOfFrames();
+
+		float[][] stereoAudioArray = new float[2][mNumFrames];
+		
+		for(int i=0;i<magValueArray.length;i++) {
+			stereoAudioArray[i]=Arrays.copyOfRange(magValueArray[i], 0, mNumFrames);
+		}
+		return stereoAudioArray;
+
+		
+	}
+	
 	
 	
 	/**
@@ -536,19 +614,53 @@ public class JLibrosa {
 	public float[][] loadAndReadStereo(String path, int sampleRate, int readDurationInSeconds)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
-		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
-		int mNumFrames = this.getNoOfFrames();
-
-		float[][] stereoAudioArray = new float[2][mNumFrames];
-		
-		for(int i=0;i<magValueArray.length;i++) {
-			stereoAudioArray[i]=Arrays.copyOfRange(magValueArray[i], 0, mNumFrames);
-		}
+		float[][] stereoAudioArray = loadAndReadStereoWithOffset(path, sampleRate, readDurationInSeconds, 0);
 		return stereoAudioArray;
 
 		
 	}
 	
+	
+	/**
+	 * This function loads the audio file, reads its Numeric Magnitude Feature
+	 * values and then takes the mean of amplitude values across all the channels and
+	 * convert the signal to mono mode
+	 * 
+	 * @param path
+	 * @param sampleRate
+	 * @param readDurationInSeconds
+	 * @return
+	 * @throws IOException
+	 * @throws WavFileException
+	 * @throws FileFormatNotSupportedException 
+	 */
+	public ArrayList<Float> loadAndReadAsListWithOffset(String path, int sampleRate, int readDurationInSeconds, int offsetDuration)
+			throws IOException, WavFileException, FileFormatNotSupportedException {
+
+		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds, offsetDuration);
+
+		DecimalFormat df = new DecimalFormat("#.#####");
+		df.setRoundingMode(RoundingMode.CEILING);
+
+		int mNumFrames = this.getNoOfFrames();
+		int mChannels = this.getNoOfChannels();
+		
+		// take the mean of amplitude values across all the channels and convert the
+		// signal to mono mode
+		float[] meanBuffer = new float[mNumFrames];
+		ArrayList<Float> meanBufferList = new ArrayList<Float>();
+		for (int q = 0; q < mNumFrames; q++) {
+			double frameVal = 0;
+			for (int p = 0; p < mChannels; p++) {
+				frameVal = frameVal + magValueArray[p][q];
+			}
+			meanBufferList.add(Float.parseFloat(df.format(frameVal / mChannels)));
+			
+		}
+		
+		return meanBufferList;
+
+	}
 	
 	
 	
@@ -569,27 +681,7 @@ public class JLibrosa {
 	public ArrayList<Float> loadAndReadAsList(String path, int sampleRate, int readDurationInSeconds)
 			throws IOException, WavFileException, FileFormatNotSupportedException {
 
-		float[][] magValueArray = readMagnitudeValuesFromFile(path, sampleRate, readDurationInSeconds);
-
-		DecimalFormat df = new DecimalFormat("#.#####");
-		df.setRoundingMode(RoundingMode.CEILING);
-
-		int mNumFrames = this.getNoOfFrames();
-		int mChannels = this.getNoOfChannels();
-		
-		// take the mean of amplitude values across all the channels and convert the
-		// signal to mono mode
-		float[] meanBuffer = new float[mNumFrames];
-		ArrayList<Float> meanBufferList = new ArrayList<Float>();
-		for (int q = 0; q < mNumFrames; q++) {
-			double frameVal = 0;
-			for (int p = 0; p < mChannels; p++) {
-				frameVal = frameVal + magValueArray[p][q];
-			}
-			meanBufferList.add(Float.parseFloat(df.format(frameVal / mChannels)));
-			
-		}
-
+		ArrayList<Float> meanBufferList = loadAndReadAsListWithOffset(path, sampleRate, readDurationInSeconds, 0);
 		return meanBufferList;
 
 	}
