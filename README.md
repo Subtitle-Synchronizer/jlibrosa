@@ -30,6 +30,26 @@ With regard to feature extraction, following features are being supported in its
 
 Pls refer jLibrosaTest.java (under 'src/test/java/com/jlibrosa/audio' directory) files for the more details about how to generate above features from audio files. 
 
+# importing with maven
+The package is distributed through Maven Central.
+[jlibrosa](https://central.sonatype.com/artifact/com.litongjava/jlibrosa),
+```
+<dependency>
+  <groupId>com.litongjava</groupId>
+  <artifactId>jlibrosa</artifactId>
+  <version>1.1.8</version>
+</dependency>
+```
+
+# install
+## how to install to maven local repository
+If you have changed the code, you can install it into the maven local repository.windows command
+```
+set JAVA_HOME=D:\\java\\jdk1.8.0_121
+mvn clean install -DskipTests -Dgpg.skip
+```
+
+
 # Comparison with Python Librosa
 
 Processed values of audio files generated from jLibrosa would be very similar to the respective values from Python librosa files. Refer the JlibrosaTest.java and the corresponding python notebook to compare the values from both the libraries. 
