@@ -1,106 +1,144 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>jlibrosa</groupId>
-	<artifactId>jlibrosa</artifactId>
-	<version>1.1.8-SNAPSHOT</version>
-	<packaging>jar</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.litongjava</groupId>
+  <artifactId>jlibrosa</artifactId>
+  <version>1.1.8</version>
+  <packaging>jar</packaging>
 
-	<name>jlibrosa</name>
-	<description>Core Java Library to extract Audio Features from given Audio file.</description>
+  <name>jlibrosa</name>
+  <description>Core Java Library to extract Audio Features from given Audio file.</description>
 
-	<url>https://github.com/Subtitle-Synchronizer/jlibrosa</url>
-	<licenses>
-		<license>
-			<name>MIT License</name>
-			<url>https://opensource.org/licenses/MIT</url>
-		</license>
-	</licenses>
-	<developers>
-		<developer>
-			<name>Abhishek Khandelwal</name>
-			<email>abhishek.cs.jec@gmail.com</email>
-			<organization>Subtitle-Synchronizer</organization>
-			<organizationUrl>https://github.com/Subtitle-Synchronizer</organizationUrl>
-		</developer>
-		<developer>
-			<name>Vasanth Kumar</name>
-			<email>vvk.victory@gmail.com</email>
-			<organization>Subtitle-Synchronizer</organization>
-			<organizationUrl>https://github.com/Subtitle-Synchronizer</organizationUrl>
-		</developer>
-	</developers>
+  <url>https://github.com/Subtitle-Synchronizer/jlibrosa</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Abhishek Khandelwal</name>
+      <email>abhishek.cs.jec@gmail.com</email>
+      <organization>Subtitle-Synchronizer</organization>
+      <organizationUrl>https://github.com/Subtitle-Synchronizer</organizationUrl>
+    </developer>
+    <developer>
+      <name>Vasanth Kumar</name>
+      <email>vvk.victory@gmail.com</email>
+      <organization>Subtitle-Synchronizer</organization>
+      <organizationUrl>https://github.com/Subtitle-Synchronizer</organizationUrl>
+    </developer>
+    <developer>
+      <name>Tong Li</name>
+      <email>litongjava@qq.com</email>
+      <organization>PPNT</organization>
+      <organizationUrl>https://gitee.com/ppnt</organizationUrl>
+    </developer>
+  </developers>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>1.8</java.version>
-	</properties>
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>1.8</java.version>
+  </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-math3</artifactId>
-			<version>3.6.1</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.googlecode.json-simple</groupId>
-		    <artifactId>json-simple</artifactId>
-		    <version>1.1.1</version>
-		</dependency>
-	</dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.6.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+  </dependencies>
 
-	<build>
-		<sourceDirectory>src/main/java</sourceDirectory>
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</resource>
-		</resources>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<!-- To generate JavaDoc, run Maven command: mvn javadoc:javadoc -->
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.2.0</version>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-						<configuration>
-							<failOnError>false</failOnError>
-						</configuration>
-					</execution>
-				</executions>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<doclint>none</doclint>
-					<failOnError>false</failOnError>
-				</configuration>
-			</plugin>
-			
-			<!-- Maven Assembly Plugin -->
+  <scm>
+    <connection>scm:git:git@github.com:Subtitle-Synchronizer/jlibrosa.git</connection>
+    <developerConnection>scm:git:git@github.com:Subtitle-Synchronizer/jlibrosa.git</developerConnection>
+    <url>git@github.com:Subtitle-Synchronizer/jlibrosa.git</url>
+  </scm>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+
+
+  <build>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src/main/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <!-- Source -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- To generate JavaDoc, run Maven command: mvn javadoc:javadoc -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <failOnError>false</failOnError>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <doclint>none</doclint>
+          <failOnError>false</failOnError>
+        </configuration>
+      </plugin>
+
+      <!-- Maven Assembly Plugin -->
+      <!-- get all project dependencies -->
+      <!-- bind to the packaging phase -->
+      <!--
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.4.1</version>
 				<configuration>
-					<!-- get all project dependencies -->
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
@@ -108,7 +146,6 @@
 				<executions>
 				  <execution>
 					<id>make-assembly</id>
-                                        <!-- bind to the packaging phase -->
 					<phase>package</phase>
 					<goals>
 						<goal>single</goal>
@@ -116,7 +153,34 @@
 				  </execution>
 				</executions>
 			</plugin>
-			
-		</plugins>
-	</build>
+			-->
+
+      <!-- GPG mvn clean deploy -Dgpg.passphrase=YourPassphase -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
